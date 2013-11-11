@@ -217,6 +217,18 @@ var _ = { };
   // provided, provide a default one
   _.some = function(collection, iterator) {
     // TIP: There's a very clever way to re-use every() here.
+    if (iterator && collection){
+            return (_.contains(_.map(collection,iterator), true)||_.contains(_.map(collection,iterator), 1));
+    } else if (collection.length === 0 || collection === undefined) {
+            return false;
+    } else if (iterator === undefined) {
+            var holder = _.map(collection, function(n){
+                    if (n === true || n === 'yes' || n === 1){
+                            return true;
+                    }
+            })
+            return (_.contains(holder, true) || _.contains(holder, 1));
+    }
   };
 
 
@@ -238,15 +250,29 @@ var _ = { };
   //   }, {
   //     bla: "even more stuff"
   //   }); // obj1 now contains key1, key2, key3 and bla
-  _.extend = function(obj) {
-  };
+_.extend = function(obj) {
+        var holder= {};
+        _.each(arguments, function(current){
+                _.each(current, function(val,key){
+                        holder[key] = val;
+                } );
+        });
+        return holder;
+};
 
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
   _.defaults = function(obj) {
+          _.each(arguments, function(current){
+                  _.each(current, function(val,key){
+                          var test = (key in obj);
+                          if(test === false){
+                                  obj[key] = val;
+                          }
+                  });
+          });
+          return obj[0];
   };
-
-
   /**
    * FUNCTIONS
    * =========
@@ -284,7 +310,20 @@ var _ = { };
   // already computed the result for the given argument and return that value
   // instead if possible.
   _.memoize = function(func) {
+          if (result === undefined){
+                  var result = {};
+          }
+          return function() {
+                  var key = func.apply(this, arguments);
+                  if (key in result){
+                          return result[key]
+                  } else {
+                          result[key] = func.apply(this, arguments);
+                          return result[key];
+                  }
+          }   
   };
+
 
   // Delays a function for the given number of milliseconds, and then calls
   // it with the arguments supplied.
@@ -293,7 +332,12 @@ var _ = { };
   // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
   // call someFunction('a', 'b') after 500ms
   _.delay = function(func, wait) {
+          var args = [].slice.call(arguments , 2);
+          return setTimeout(function(){
+                  return func.apply(null, args);
+          },wait);
   };
+
 
 
   /**
@@ -303,6 +347,16 @@ var _ = { };
 
   // Shuffle an array.
   _.shuffle = function(array) {
+          var unit;
+          var next;
+          var result = [];
+          while (array.length > 0){
+                  unit = 1/array.length;
+                  next = Math.floor(Math.random()/unit);
+                  var select = array.splice(next,1)
+                  result.push(select[0]);
+          }
+          return result;
   };
 
 
